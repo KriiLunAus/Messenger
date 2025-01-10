@@ -1,5 +1,6 @@
-import React, {useContext} from 'react';
-import {  StyleSheet, View, Text, Pressable, StatusBar } from 'react-native';
+import React, { useContext, useRef, useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import {  StyleSheet, View, Text, Pressable, StatusBar, TextInput, Animated } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
@@ -8,6 +9,9 @@ const index = () => {
 
 const context = useContext(ThemeContext)
 
+  const [searchValue, setSearchValue] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const inputAnim = useRef(new Animated.Value(500)).current;
   if (!context) {
   throw new Error("ThemeContext must be used within a ThemeProvider")
   }
@@ -16,26 +20,51 @@ const context = useContext(ThemeContext)
 
   const styles = createStyles(theme, colorScheme)
 
+  const openSearch = () => {
+    setIsSearchOpen(true),
+      Animated.timing(inputAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: false,
+      }).start(); 
+  } 
+
+const closeSearch = () => {
+      Animated.timing(inputAnim, {
+        toValue: 500,
+        duration: 300,
+        useNativeDriver: false,
+      }).start(() => { setIsSearchOpen(false) }); 
+  } 
+
   return (
-    <View style={styles.container}>
-      <View style={styles.bar}>
-        <View style={styles.barLeft}>
-          <Pressable style={styles.profile}>
-            <Ionicons name="person" size={24} color="white"  />
+    <SafeAreaView style={styles.container}>
+      <View style={styles.barContainer}>
+        {!isSearchOpen && <View style={styles.bar}>
+          <View style={styles.barLeft}>
+            <Pressable style={styles.profile}>
+              <Ionicons name="person" size={24} color="white"  />
+            </Pressable>
+            <Text style={styles.title}>Shmignal</Text>
+          </View>
+          <View style={styles.barRight}>
+            <Pressable>
+              <AntDesign name="search1" size={24} color="white" style={{marginRight: 20}} onPress={openSearch} />
+            </Pressable>
+            <Pressable>
+              <Entypo name="dots-three-vertical" size={24} color="white" />
+            </Pressable>
+          </View>
+        </View>}
+        {isSearchOpen && <Animated.View style={[styles.inputContainer, {transform: [{translateX: inputAnim}]}]}>
+          <TextInput style={styles.input} value={searchValue} onChangeText={setSearchValue} />
+          <Pressable style={styles.leftArrow} onPress={closeSearch}>
+            <AntDesign name="arrowleft" size={30} color={theme.text} />
           </Pressable>
-          <Text style={styles.title}>Shmignal</Text>
-        </View>
-        <View style={styles.barRight}>
-          <Pressable>
-            <AntDesign name="search1" size={24} color="white" style={{marginRight: 20}} />
-          </Pressable>
-          <Pressable>
-            <Entypo name="dots-three-vertical" size={24} color="white" />
-          </Pressable>
-        </View>
+        </Animated.View>}
       </View>
             <StatusBar barStyle={theme.text} backgroundColor={theme.background} />
-    </View>
+    </SafeAreaView>
   )
 }
 
@@ -48,7 +77,10 @@ const createStyles = (theme, colorScheme) => {
     container: {
       backgroundColor: theme.background,
       minHeight: '110%',
-    },
+   },
+   barContainer: {
+     position: "relative",
+   },
     bar: {
       display: "flex",
       flexDirection: "row",
@@ -74,8 +106,28 @@ const createStyles = (theme, colorScheme) => {
       color: "white",
       fontSize: 24,
       marginLeft: 20,
-    }
-
+   },
+   inputContainer: {
+     position: "absolute",
+     flexDirection: "row",
+     alignItems: "center",
+     right: 0,
+     left: 0,
+    },
+   input: {
+     flex: 1,
+     height: 50,
+     paddingLeft: 40,
+     backgroundColor: colorScheme === "dark" ? "white" : "black",
+     borderRadius: 25,
+   },
+   leftArrow: {
+     position: "absolute",
+     left: 10,
+     backgroundColor: "black",
+     borderRadius: 17,
+     padding: 2
+   },
 
   })
 }
